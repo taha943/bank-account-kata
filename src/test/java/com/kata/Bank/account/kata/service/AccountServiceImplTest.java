@@ -11,6 +11,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class AccountServiceImplTest {
@@ -120,6 +124,28 @@ class AccountServiceImplTest {
         assertTrue(statement.contains("Type"));
         assertTrue(statement.contains("Amount"));
         assertTrue(statement.contains("Balance"));
+    }
+
+    @Test
+    void concurrentDepositsAndWithdrawals_shouldMaintainCorrectBalance() throws Exception {
+        int threadCount = 10;
+        var latch = new CountDownLatch(threadCount);
+        var executor = Executors.newFixedThreadPool(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                accountService.deposit(BigDecimal.valueOf(100));
+                accountService.withdraw(BigDecimal.valueOf(50));
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        String statement = accountService.printStatement();
+        assertTrue(statement.contains("500.00"), "Expected balance 500, got: " + statement);
+        assertEquals(20, statement.split("\n").length - 2);
     }
 
     @Test

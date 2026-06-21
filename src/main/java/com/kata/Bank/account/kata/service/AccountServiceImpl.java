@@ -9,16 +9,17 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
 public class AccountServiceImpl implements AccountService {
 
     private BigDecimal balance = BigDecimal.ZERO;
-    private final List<Operation> operations = new ArrayList<>();
+    private final List<Operation> operations = new CopyOnWriteArrayList<>();
     private final Clock clock;
+    private final Object lock = new Object();
 
     public AccountServiceImpl() {
         this.clock = Clock.systemDefaultZone();
@@ -30,33 +31,37 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void deposit(BigDecimal amount) {
-        validateAmount(amount);
+        synchronized (lock) {
+            validateAmount(amount);
 
-        balance = balance.add(amount);
-        operations.add(new Operation(
-                OperationType.DEPOSIT,
-                amount,
-                LocalDateTime.now(clock),
-                balance
-        ));
+            balance = balance.add(amount);
+            operations.add(new Operation(
+                    OperationType.DEPOSIT,
+                    amount,
+                    LocalDateTime.now(clock),
+                    balance
+            ));
+        }
         log.info("Deposited {} -> new balance: {}", amount, balance);
     }
 
     @Override
     public void withdraw(BigDecimal amount) {
-        validateAmount(amount);
+        synchronized (lock) {
+            validateAmount(amount);
 
-        if (amount.compareTo(balance) > 0) {
-            throw new IllegalArgumentException("Insufficient balance");
+            if (amount.compareTo(balance) > 0) {
+                throw new IllegalArgumentException("Insufficient balance");
+            }
+
+            balance = balance.subtract(amount);
+            operations.add(new Operation(
+                    OperationType.WITHDRAWAL,
+                    amount,
+                    LocalDateTime.now(clock),
+                    balance
+            ));
         }
-
-        balance = balance.subtract(amount);
-        operations.add(new Operation(
-                OperationType.WITHDRAWAL,
-                amount,
-                LocalDateTime.now(clock),
-                balance
-        ));
         log.info("Withdrew {} -> new balance: {}", amount, balance);
     }
 
