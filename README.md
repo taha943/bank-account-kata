@@ -35,17 +35,17 @@ AccountController -> AccountService -> operation (domain)
 
 ```bash
 # Deposit
-curl -X POST http://localhost:8080/api/account/deposit \
+curl -X POST http://localhost:8088/api/account/deposit \
   -H "Content-Type: application/json" \
   -d '{"amount": 100}'
 
 # Withdraw
-curl -X POST http://localhost:8080/api/account/withdraw \
+curl -X POST http://localhost:8088/api/account/withdraw \
   -H "Content-Type: application/json" \
   -d '{"amount": 30}'
 
 # Print statement
-curl http://localhost:8080/api/account/statement/print
+curl http://localhost:8088/api/account/statement/print
 ```
 
 ### Statement Output
