@@ -36,7 +36,9 @@ class AccountControllerTest {
         mockMvc.perform(post("/api/account/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Deposit successful"))
+                .andExpect(jsonPath("$.amount").value(100));
 
         verify(accountService).deposit(BigDecimal.valueOf(100));
     }
@@ -60,10 +62,12 @@ class AccountControllerTest {
         mockMvc.perform(post("/api/account/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Withdraw successful"))
+                .andExpect(jsonPath("$.amount").value(50));
 
-            verify(accountService).withdraw(BigDecimal.valueOf(50));
-        }
+        verify(accountService).withdraw(BigDecimal.valueOf(50));
+    }
 
     @Test
     void withdraw_withInvalidAmount_shouldReturnBadRequest() throws Exception {

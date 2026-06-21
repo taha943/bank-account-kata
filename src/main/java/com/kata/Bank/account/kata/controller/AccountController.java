@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/account")
@@ -20,15 +22,21 @@ public class AccountController {
 
 
     @PostMapping("/deposit")
-    public ResponseEntity<Void> deposit(@Valid @RequestBody DepositRequest request) {
+    public ResponseEntity<Map<String, Object>> deposit(@Valid @RequestBody DepositRequest request) {
         accountService.deposit(request.amount());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "message", "Deposit successful",
+                "amount", request.amount()
+        ));
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Void> withdraw(@Valid @RequestBody WithdrawRequest request) {
+    public ResponseEntity<Map<String, Object>> withdraw(@Valid @RequestBody WithdrawRequest request) {
         accountService.withdraw(request.amount());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "message", "Withdraw successful",
+                "amount", request.amount()
+        ));
     }
 
 
